@@ -9,12 +9,19 @@ class AuthRepository {
         delay(1000)
         return if (email.isNotEmpty() && password.length >= 6) {
             val role = if (email.contains("admin")) "admin" else "student"
-            // Mengambil nama dari email (contoh: ametys@gmail.com -> Ametys)
-            val nameFromEmail = email.substringBefore("@").replaceFirstChar { it.uppercase() }
+            
+            // Ambil nama depan saja (contoh: amethis.siregar@gmail.com -> Amethis)
+            val cleanName = email.substringBefore("@")
+                .substringBefore(".")
+                .substringBefore("_")
+                .replaceFirstChar { it.uppercase() }
+            
+            // Gunakan format ID yang konsisten (Garis bawah _)
+            val userId = "user_" + email.lowercase().trim().hashCode()
             
             val user = User(
-                id = "user-${System.currentTimeMillis()}",
-                name = nameFromEmail,
+                id = userId,
+                name = cleanName,
                 email = email,
                 role = role
             )
@@ -27,7 +34,8 @@ class AuthRepository {
     suspend fun register(email: String, password: String, user: User): Result<String> {
         delay(1000)
         return if (email.contains("@") && password.length >= 6) {
-            Result.success("user-${System.currentTimeMillis()}")
+            // Samakan format ID dengan Login
+            Result.success("user_" + email.lowercase().trim().hashCode())
         } else {
             Result.failure(Exception("Data tidak valid"))
         }

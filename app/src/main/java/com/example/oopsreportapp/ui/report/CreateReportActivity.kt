@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -19,6 +18,8 @@ import com.example.oopsreportapp.viewmodel.ReportViewModel
 import com.example.oopsreportapp.viewmodel.UiState
 import com.example.oopsreportapp.viewmodel.ViewModelFactory
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Date
 import java.util.UUID
 
@@ -28,15 +29,13 @@ class CreateReportActivity : AppCompatActivity() {
         ViewModelFactory.getInstance(this)
     }
     private lateinit var sessionManager: SessionManager
-    private var currentImageUri: Uri? = null
+    private var savedImagePath: String? = null
 
     private val launcherGallery = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            currentImageUri = uri
-            binding.ivPreview.visibility = View.VISIBLE
-            binding.ivPreview.setImageURI(uri)
+            saveImageToInternalStorage(uri)
         }
     }
 
@@ -52,19 +51,37 @@ class CreateReportActivity : AppCompatActivity() {
         observeViewModel()
     }
 
+    private fun saveImageToInternalStorage(uri: Uri) {
+        try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val fileName = "IMG_${UUID.randomUUID()}.jpg"
+            val file = File(filesDir, fileName)
+            val outputStream = FileOutputStream(file)
+            
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            
+            // Simpan Path Absolut, bukan URI (Lebih stabil)
+            savedImagePath = file.absolutePath
+            binding.ivPreview.visibility = View.VISIBLE
+            binding.ivPreview.setImageURI(Uri.fromFile(file))
+            
+        } catch (e: Exception) {
+            Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setupDropdowns() {
         val categories = arrayOf("Fasilitas", "Kebersihan", "Keamanan", "Lainnya")
         val locations = arrayOf("Gedung A", "Gedung B", "Gedung C", "Gedung D", "Gedung F")
         val priorities = arrayOf("Rendah", "Sedang", "Darurat")
 
-        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, categories)
-        binding.etCategory.setAdapter(categoryAdapter)
-
-        val locationAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, locations)
-        binding.etLocation.setAdapter(locationAdapter)
-
-        val priorityAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, priorities)
-        binding.etPriority.setAdapter(priorityAdapter)
+        binding.etCategory.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, categories))
+        binding.etLocation.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, locations))
+        binding.etPriority.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, priorities))
     }
 
     private fun setupClickListeners() {
@@ -93,7 +110,7 @@ class CreateReportActivity : AppCompatActivity() {
                 location = location,
                 priority = if (priority.isEmpty()) "Sedang" else priority,
                 description = description,
-                imageUrl = currentImageUri?.toString(),
+                imageUrl = savedImagePath, // Simpan path absolut
                 status = "Pending",
                 createdAt = Date()
             )
