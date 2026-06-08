@@ -75,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
-            android:text="Oops Belum punya akun? Yuk Daftar"
+            android:text="Oops Belum punya akun? Yuk Daftar!"
             android:textColor="@color/design_default_color_primary"
             android:textSize="14sp" />
 
