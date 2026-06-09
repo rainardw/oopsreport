@@ -58,7 +58,9 @@ class LoginActivity : AppCompatActivity() {
                                 user.role
                             )
 
-                            val message = if (user.role == "admin") "Login berhasil sebagai Administrator" else "Login berhasil"
+                            // Perbaikan: Gunakan equals ignoreCase agar "Admin" atau "admin" tetap terbaca
+                            val isAdmin = user.role.equals("admin", ignoreCase = true)
+                            val message = if (isAdmin) "Login berhasil sebagai Administrator" else "Login berhasil"
                             Toast.makeText(this@LoginActivity, message, Toast.LENGTH_SHORT).show()
 
                             startActivity(Intent(this@LoginActivity, DashboardActivity::class.java))

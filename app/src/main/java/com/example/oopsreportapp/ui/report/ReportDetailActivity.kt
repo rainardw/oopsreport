@@ -1,14 +1,12 @@
 package com.example.oopsreportapp.ui.report
 
 import android.content.Intent
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Base64
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -20,6 +18,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bumptech.glide.Glide
 import com.example.oopsreportapp.R
 import com.example.oopsreportapp.data.model.Report
 import com.example.oopsreportapp.databinding.ActivityReportDetailBinding
@@ -93,21 +92,28 @@ class ReportDetailActivity : AppCompatActivity() {
 
             tvAdminResponse.text = if (report.adminResponse.isEmpty()) "Belum ada respon dari Admin." else report.adminResponse
 
-            // FIX FOTO: Menggunakan BitmapFactory untuk kestabilan load gambar dari storage internal
+            // PERBAIKAN FOTO (Plan B): Mendukung URL Storage dan Base64
             if (!report.imageUrl.isNullOrEmpty()) {
-                try {
-                    val imgFile = File(report.imageUrl)
-                    if (imgFile.exists()) {
-                        ivDetailImage.visibility = View.VISIBLE
-                        // Optimasi loading gambar untuk menghindari memory leak/kotak hijau
-                        val options = BitmapFactory.Options().apply { inSampleSize = 2 }
-                        val bitmap = BitmapFactory.decodeFile(imgFile.absolutePath, options)
-                        ivDetailImage.setImageBitmap(bitmap)
-                    } else {
+                ivDetailImage.visibility = View.VISIBLE
+                
+                if (report.imageUrl.startsWith("http")) {
+                    // Jika dari URL Firebase Storage
+                    Glide.with(this@ReportDetailActivity)
+                        .load(report.imageUrl)
+                        .placeholder(android.R.drawable.ic_menu_gallery)
+                        .into(ivDetailImage)
+                } else {
+                    // Jika dari String Base64 (Plan B)
+                    try {
+                        val imageBytes = Base64.decode(report.imageUrl, Base64.DEFAULT)
+                        Glide.with(this@ReportDetailActivity)
+                            .asBitmap()
+                            .load(imageBytes)
+                            .placeholder(android.R.drawable.ic_menu_gallery)
+                            .into(ivDetailImage)
+                    } catch (e: Exception) {
                         ivDetailImage.visibility = View.GONE
                     }
-                } catch (e: Exception) {
-                    ivDetailImage.visibility = View.GONE
                 }
             } else {
                 ivDetailImage.visibility = View.GONE
@@ -158,7 +164,6 @@ class ReportDetailActivity : AppCompatActivity() {
         canvas.drawText("Deskripsi Keluhan:", x, y, paint); y += 25f
         paint.isFakeBoldText = false
         
-        // Wrap text deskripsi agar tidak terpotong ke samping
         val description = report.description
         val words = description.split(" ")
         var line = ""
@@ -188,7 +193,6 @@ class ReportDetailActivity : AppCompatActivity() {
             pdfDocument.close()
             outputStream.close()
             
-            // Buka PDF menggunakan FileProvider yang sudah didaftarkan di Manifest
             val contentUri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.fileprovider", file)
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(contentUri, "application/pdf")
@@ -202,7 +206,7 @@ class ReportDetailActivity : AppCompatActivity() {
     }
 
     private fun setupAdminPanel(report: Report) {
-        val isAdmin = sessionManager.getUserRole() == "admin"
+        val isAdmin = sessionManager.getUserRole().equals("admin", ignoreCase = true)
         if (isAdmin && report.status != "Selesai") {
             binding.layoutAdminAction.visibility = View.VISIBLE
             binding.btnProcess.setOnClickListener {
@@ -249,7 +253,9 @@ class ReportDetailActivity : AppCompatActivity() {
                         if (state is UiState.Success) {
                             displayReportDetails(state.data)
                             setupAdminPanel(state.data)
-                            if (sessionManager.getUserRole() == "admin") viewModel.markAsRead(state.data.id)
+                            if (sessionManager.getUserRole().equals("admin", ignoreCase = true)) {
+                                viewModel.markAsRead(state.data.id)
+                            }
                         }
                     }
                 }

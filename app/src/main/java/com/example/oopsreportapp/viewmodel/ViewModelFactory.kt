@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.oopsreportapp.data.repository.ReportRepository
-import com.example.oopsreportapp.data.source.local.ReportDatabase
 
 class ViewModelFactory(private val repository: ReportRepository) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
@@ -21,7 +20,7 @@ class ViewModelFactory(private val repository: ReportRepository) : ViewModelProv
         fun getInstance(context: Context): ViewModelFactory =
             instance ?: synchronized(this) {
                 instance ?: ViewModelFactory(
-                    ReportRepository(ReportDatabase.getInstance(context).reportDao())
+                    ReportRepository()
                 )
             }.also { instance = it }
     }

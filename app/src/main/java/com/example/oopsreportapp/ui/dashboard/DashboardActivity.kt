@@ -47,19 +47,21 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        val role = sessionManager.getUserRole()
+        val role = sessionManager.getUserRole() ?: "student"
         val name = sessionManager.getUserName()
         
-        val roleDisplay = if (role == "admin") "\nRole: Administrator" else ""
+        // Perbaikan: Gunakan equals dengan ignoreCase = true
+        val isAdmin = role.equals("admin", ignoreCase = true)
+        
+        val roleDisplay = if (isAdmin) "\nRole: Administrator" else ""
         binding.tvWelcome.text = "Selamat Datang, $name!$roleDisplay"
         
-        binding.fabCreateReport.visibility = if (role == "admin") View.GONE else View.VISIBLE
+        binding.fabCreateReport.visibility = if (isAdmin) View.GONE else View.VISIBLE
         binding.btnLogout.visibility = View.GONE 
     }
 
     private fun setupRecyclerView() {
         adapter = ReportAdapter { report ->
-            // HANYA mengirim ID Laporan (Sangat Aman)
             val intent = Intent(this, ReportDetailActivity::class.java).apply {
                 putExtra(ReportDetailActivity.EXTRA_REPORT_ID, report.id)
             }
@@ -79,7 +81,8 @@ class DashboardActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.dashboard_menu, menu)
         val statsItem = menu?.findItem(R.id.action_stats)
-        statsItem?.isVisible = sessionManager.getUserRole() == "admin"
+        // Perbaikan: Gunakan equals dengan ignoreCase = true
+        statsItem?.isVisible = sessionManager.getUserRole().equals("admin", ignoreCase = true)
         return true
     }
 
@@ -132,7 +135,8 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun loadReports() {
         val userId = sessionManager.getUserId() ?: ""
-        val isAdmin = sessionManager.getUserRole() == "admin"
+        // Perbaikan: Gunakan equals dengan ignoreCase = true
+        val isAdmin = sessionManager.getUserRole().equals("admin", ignoreCase = true)
         viewModel.loadReports(userId, isAdmin = isAdmin)
     }
 

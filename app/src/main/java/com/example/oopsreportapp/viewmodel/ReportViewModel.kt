@@ -64,11 +64,11 @@ class ReportViewModel(private val repository: ReportRepository) : ViewModel() {
         }
     }
 
-    fun createReport(report: Report) {
+    fun createReport(report: Report, imagePath: String?) {
         viewModelScope.launch {
             _submitState.value = UiState.Loading
             try {
-                val id = repository.createReport(report)
+                val id = repository.createReport(report, imagePath)
                 _submitState.value = UiState.Success(id)
             } catch (e: Exception) {
                 _submitState.value = UiState.Error(e.message ?: "Gagal membuat laporan")

@@ -1,98 +1,85 @@
 package com.example.oopsreportapp.data.repository
 
 import com.example.oopsreportapp.data.model.Report
-import com.example.oopsreportapp.data.source.local.dao.ReportDao
-import com.example.oopsreportapp.data.source.local.entity.ReportEntity
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 
-class ReportRepository(private val reportDao: ReportDao) {
+class ReportRepository {
+    private val db = FirebaseFirestore.getInstance()
+    private val reportsCollection = db.collection("reports")
 
-    fun getReportsByUser(userId: String): Flow<List<Report>> {
-        return reportDao.getReportsByUser(userId).map { entities ->
-            entities.map { it.toModel() }
-        }
+    fun getAllReports(): Flow<List<Report>> = callbackFlow {
+        val subscription = reportsCollection
+            .orderBy("priorityValue", Query.Direction.ASCENDING)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val reports = snapshot?.toObjects(Report::class.java) ?: emptyList()
+                trySend(reports)
+            }
+        awaitClose { subscription.remove() }
     }
 
-    fun getAllReports(): Flow<List<Report>> {
-        return reportDao.getAllReports().map { entities ->
-            entities.map { it.toModel() }
-        }
+    fun getReportsByUser(userId: String): Flow<List<Report>> = callbackFlow {
+        val subscription = reportsCollection
+            .whereEqualTo("userId", userId)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val reports = snapshot?.toObjects(Report::class.java) ?: emptyList()
+                trySend(reports)
+            }
+        awaitClose { subscription.remove() }
     }
 
     suspend fun getReportById(reportId: String): Report? {
-        return reportDao.getReportById(reportId)?.toModel()
+        return reportsCollection.document(reportId).get().await().toObject(Report::class.java)
     }
 
-    suspend fun createReport(report: Report): String {
-        reportDao.insertReport(report.toEntity())
+    // Plan B: Langsung simpan report (imageUrl di sini akan berisi string Base64)
+    suspend fun createReport(report: Report, base64Image: String?): String {
+        val finalReport = if (base64Image != null) {
+            report.copy(imageUrl = base64Image)
+        } else {
+            report
+        }
+        reportsCollection.document(report.id).set(finalReport).await()
         return report.id
     }
 
     suspend fun updateReportStatus(reportId: String, status: String, response: String) {
-        val entity = reportDao.getReportById(reportId)
-        entity?.let {
-            val currentTime = System.currentTimeMillis()
-            val updated = it.copy(
-                status = status,
-                adminResponse = response,
-                processedAt = if (status == "Proses") currentTime else it.processedAt,
-                completedAt = if (status == "Selesai") currentTime else it.completedAt,
-                updatedAt = currentTime
-            )
-            reportDao.updateReport(updated)
-        }
+        val updates = mutableMapOf<String, Any>(
+            "status" to status,
+            "adminResponse" to response,
+            "updatedAt" to Date()
+        )
+        if (status == "Proses") updates["processedAt"] = Date()
+        if (status == "Selesai") updates["completedAt"] = Date()
+
+        reportsCollection.document(reportId).update(updates).await()
     }
 
     suspend fun markAsRead(reportId: String) {
-        val entity = reportDao.getReportById(reportId)
-        if (entity != null && entity.readAt == null) {
-            val updated = entity.copy(readAt = System.currentTimeMillis())
-            reportDao.updateReport(updated)
-        }
+        try {
+            val doc = reportsCollection.document(reportId).get().await()
+            if (doc.exists() && doc.get("readAt") == null) {
+                reportsCollection.document(reportId).update("readAt", Date()).await()
+            }
+        } catch (e: Exception) { }
     }
 
     suspend fun deleteReport(reportId: String) {
-        reportDao.deleteReportById(reportId)
+        reportsCollection.document(reportId).delete().await()
     }
-
-    // Mapper extensions
-    private fun ReportEntity.toModel() = Report(
-        id = id,
-        userId = userId,
-        userName = userName,
-        title = title,
-        description = description,
-        category = category,
-        location = location,
-        imageUrl = imageUrl,
-        status = status,
-        priority = priority,
-        adminResponse = adminResponse,
-        createdAt = createdAt?.let { Date(it) },
-        readAt = readAt?.let { Date(it) },
-        processedAt = processedAt?.let { Date(it) },
-        completedAt = completedAt?.let { Date(it) },
-        updatedAt = updatedAt?.let { Date(it) }
-    )
-
-    private fun Report.toEntity() = ReportEntity(
-        id = id,
-        userId = userId,
-        userName = userName,
-        title = title,
-        description = description,
-        category = category,
-        location = location,
-        imageUrl = imageUrl,
-        status = status,
-        priority = priority,
-        adminResponse = adminResponse,
-        createdAt = createdAt?.time,
-        readAt = readAt?.time,
-        processedAt = processedAt?.time,
-        completedAt = completedAt?.time,
-        updatedAt = updatedAt?.time
-    )
 }

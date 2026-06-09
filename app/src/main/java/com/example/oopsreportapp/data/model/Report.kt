@@ -13,7 +13,8 @@ data class Report(
     val location: String = "",
     val imageUrl: String? = null,
     val status: String = "Pending",
-    val priority: String = "Sedang", // Rendah, Sedang, Darurat
+    val priority: String = "Sedang", 
+    val priorityValue: Int = 2, // 1: Darurat, 2: Sedang, 3: Rendah
     val adminResponse: String = "",
     val createdAt: Date? = null,
     val readAt: Date? = null,

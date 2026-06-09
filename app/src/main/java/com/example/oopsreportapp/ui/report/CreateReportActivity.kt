@@ -1,7 +1,10 @@
 package com.example.oopsreportapp.ui.report
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -18,6 +21,7 @@ import com.example.oopsreportapp.viewmodel.ReportViewModel
 import com.example.oopsreportapp.viewmodel.UiState
 import com.example.oopsreportapp.viewmodel.ViewModelFactory
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Date
@@ -64,13 +68,33 @@ class CreateReportActivity : AppCompatActivity() {
                 }
             }
             
-            // Simpan Path Absolut, bukan URI (Lebih stabil)
             savedImagePath = file.absolutePath
             binding.ivPreview.visibility = View.VISIBLE
             binding.ivPreview.setImageURI(Uri.fromFile(file))
             
         } catch (e: Exception) {
             Toast.makeText(this, "Gagal memproses gambar", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Fungsi baru untuk mengubah gambar ke Base64 (Plan B)
+    private fun getBase64Image(path: String?): String? {
+        if (path == null) return null
+        return try {
+            val file = File(path)
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            
+            // Resize gambar jika terlalu besar (opsional tapi disarankan)
+            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, 800, (bitmap.height * (800.0 / bitmap.width)).toInt(), true)
+            
+            val outputStream = ByteArrayOutputStream()
+            // Kompresi kualitas ke 60% agar ukuran string tidak terlalu besar
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+            val byteArray = outputStream.toByteArray()
+            
+            Base64.encodeToString(byteArray, Base64.DEFAULT)
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -101,6 +125,15 @@ class CreateReportActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val pValue = when(priority) {
+                "Darurat" -> 1
+                "Sedang" -> 2
+                else -> 3
+            }
+
+            // Ubah gambar ke Base64 string sebelum dikirim
+            val base64Image = getBase64Image(savedImagePath)
+
             val report = Report(
                 id = UUID.randomUUID().toString(),
                 userId = sessionManager.getUserId() ?: "",
@@ -109,13 +142,14 @@ class CreateReportActivity : AppCompatActivity() {
                 category = category,
                 location = location,
                 priority = if (priority.isEmpty()) "Sedang" else priority,
+                priorityValue = pValue,
                 description = description,
-                imageUrl = savedImagePath, // Simpan path absolut
                 status = "Pending",
                 createdAt = Date()
             )
 
-            viewModel.createReport(report)
+            // Kirim laporan dengan string gambar (Base64)
+            viewModel.createReport(report, base64Image)
         }
     }
 
@@ -129,7 +163,7 @@ class CreateReportActivity : AppCompatActivity() {
                             binding.btnSubmit.text = "Mengirim..."
                         }
                         is UiState.Success -> {
-                            Toast.makeText(this@CreateReportActivity, "Laporan berhasil dikirim", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@CreateReportActivity, "Laporan terkirim!", Toast.LENGTH_SHORT).show()
                             finish()
                         }
                         is UiState.Error -> {
