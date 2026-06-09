@@ -49,7 +49,6 @@ class ReportDetailActivity : AppCompatActivity() {
         _binding = ActivityReportDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
         sessionManager = SessionManager(this)
         
         reportId = intent.getStringExtra(EXTRA_REPORT_ID)
@@ -60,10 +59,6 @@ class ReportDetailActivity : AppCompatActivity() {
             return
         }
 
-        supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(true)
-        }
-
         observeViewModel()
         viewModel.loadReportById(reportId!!)
     }
@@ -72,38 +67,24 @@ class ReportDetailActivity : AppCompatActivity() {
         currentReport = report
         binding.apply {
             tvDetailTitle.text = report.title
-            tvDetailCategory.text = report.category
             tvDetailStatus.text = report.status
-            tvDetailLocation.text = report.location
             tvDetailDescription.text = report.description
             
             tvDetailPriority.text = report.priority
-            val priorityColor = when (report.priority) {
-                "Darurat" -> "#F44336"
-                "Sedang" -> "#FF9800"
-                else -> "#4CAF50"
-            }
-            try { tvDetailPriority.setBackgroundColor(Color.parseColor(priorityColor)) } catch (e: Exception) {}
+            
+            tvLogDate1.text = formatDate(report.createdAt)
+            tvLogDate2.text = formatDate(report.processedAt ?: report.createdAt)
 
-            tvLogCreated.text = "• Dibuat: ${formatDate(report.createdAt)}"
-            tvLogRead.text = "• Dibaca Admin: ${formatDate(report.readAt)}"
-            tvLogProcessed.text = "• Diproses: ${formatDate(report.processedAt)}"
-            tvLogCompleted.text = "• Selesai: ${formatDate(report.completedAt)}"
-
-            tvAdminResponse.text = if (report.adminResponse.isEmpty()) "Belum ada respon dari Admin." else report.adminResponse
-
-            // PERBAIKAN FOTO (Plan B): Mendukung URL Storage dan Base64
+            // PERBAIKAN FOTO: Mendukung URL Storage dan Base64
             if (!report.imageUrl.isNullOrEmpty()) {
                 ivDetailImage.visibility = View.VISIBLE
                 
                 if (report.imageUrl.startsWith("http")) {
-                    // Jika dari URL Firebase Storage
                     Glide.with(this@ReportDetailActivity)
                         .load(report.imageUrl)
                         .placeholder(android.R.drawable.ic_menu_gallery)
                         .into(ivDetailImage)
                 } else {
-                    // Jika dari String Base64 (Plan B)
                     try {
                         val imageBytes = Base64.decode(report.imageUrl, Base64.DEFAULT)
                         Glide.with(this@ReportDetailActivity)
@@ -224,27 +205,6 @@ class ReportDetailActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.report_detail_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_delete -> {
-                AlertDialog.Builder(this).setTitle("Hapus Laporan?").setMessage("Data ini akan dihapus permanen.").setPositiveButton("Hapus"){_,_ ->
-                    reportId?.let { viewModel.deleteReport(it) } 
-                }.setNegativeButton("Batal", null).show()
-                true
-            }
-            R.id.action_download -> {
-                currentReport?.let { generatePDF(it) }
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -277,10 +237,9 @@ class ReportDetailActivity : AppCompatActivity() {
 
     private fun formatDate(date: java.util.Date?): String {
         if (date == null) return "-"
-        return SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(date)
+        return SimpleDateFormat("dd MMM HH:mm", Locale.getDefault()).format(date)
     }
 
-    override fun onSupportNavigateUp(): Boolean { finish(); return true }
     override fun onDestroy() { super.onDestroy(); _binding = null }
     
     companion object { const val EXTRA_REPORT_ID = "extra_report_id" }

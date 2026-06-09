@@ -2,4 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="bg_cream">#FFF8F0</color>
+    <color name="text_primary">#1E1E2A</color>
+    <color name="text_secondary">#6B6B7B</color>
+
+    <color name="btn_blue">#7B8CFF</color>
+    <color name="btn_pink">#FF9DB2</color>
+    <color name="btn_green">#58C472</color>
+
+    <color name="status_red">#FF6B6B</color>
+    <color name="status_orange">#FFB84D</color>
+    <color name="status_blue">#4D94FF</color>
+    <color name="status_green">#58C472</color>
+
+    <color name="border_color">#000000</color>
 </resources>

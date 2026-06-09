@@ -2,7 +2,13 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.OopsReportApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowBackground">@color/bg_cream</item>
+        <item name="android:statusBarColor">@color/bg_cream</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <item name="colorPrimary">@color/btn_blue</item>
+        <item name="colorSecondary">@color/btn_pink</item>
+        <item name="android:textColorPrimary">@color/black</item>
     </style>
 
     <style name="Theme.OopsReportApp" parent="Base.Theme.OopsReportApp" />

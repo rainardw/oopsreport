@@ -1,120 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/bg_cream"
+    android:padding="24dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:text="Buat Laporan"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <com.google.android.material.textfield.TextInputLayout
+    <ImageButton
+        android:id="@+id/btnClose"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        app:tint="@color/black"
+        app:layout_constraintTop_toTopOf="@id/tvTitle"
+        app:layout_constraintBottom_toBottomOf="@id/tvTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Close" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="24dp"
+        android:clipToPadding="false"
+        android:paddingBottom="24dp"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Judul Laporan"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            android:orientation="vertical">
 
-            <com.google.android.material.textfield.TextInputEditText
+            <EditText
                 android:id="@+id/etTitle"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="54dp"
+                android:background="@drawable/bg_neo_brutalist_edittext"
+                android:hint="Judul Laporan"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="16dp"
+                android:inputType="textCapSentences" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/menu_category"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Kategori">
-
-            <AutoCompleteTextView
-                android:id="@+id/etCategory"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/menu_location"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Lokasi">
+                <AutoCompleteTextView
+                    android:id="@+id/etCategory"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_neo_brutalist_edittext"
+                    android:hint="Kategori"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:textColor="@color/black"
+                    android:completionThreshold="1" />
 
-            <AutoCompleteTextView
-                android:id="@+id/etLocation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/menu_priority"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Prioritas">
+                <AutoCompleteTextView
+                    android:id="@+id/etLocation"
+                    android:layout_width="0dp"
+                    android:layout_height="54dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_neo_brutalist_edittext"
+                    android:hint="Lokasi"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/black"
+                    android:completionThreshold="1" />
+            </LinearLayout>
 
             <AutoCompleteTextView
                 android:id="@+id/etPriority"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:text="Sedang" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="54dp"
+                android:background="@drawable/bg_neo_brutalist_edittext"
+                android:hint="Prioritas"
+                android:paddingHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@color/black"
+                android:completionThreshold="1" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Deskripsi Lengkap"
-            app:helperText="Contoh: keran bocor di toilet Gedung B lantai 2 sebelah timur Prodi Teknik Elektro"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-            <com.google.android.material.textfield.TextInputEditText
+            <EditText
                 android:id="@+id/etDescription"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minLines="4"
-                android:gravity="top" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_height="150dp"
+                android:background="@drawable/bg_neo_brutalist_edittext"
+                android:hint="Deskripsi lengkap kerusakan..."
+                android:gravity="top"
+                android:padding="16dp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="16dp"
+                android:inputType="textMultiLine" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Bukti Foto"
-            android:textStyle="bold" />
+            <FrameLayout
+                android:id="@+id/btnPickImage"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="@drawable/bg_neo_brutalist_card"
+                android:layout_marginBottom="24dp"
+                android:clickable="true"
+                android:focusable="true">
 
-        <ImageView
-            android:id="@+id/ivPreview"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginTop="8dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_launcher_background"
-            android:visibility="gone"
-            android:contentDescription="Pratinjau Foto" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btnPickImage"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Pilih Foto Bukti" />
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:src="@android:drawable/ic_menu_camera"
+                        app:tint="@color/black"
+                        android:contentDescription="Pick Image" />
 
-        <Button
-            android:id="@+id/btnSubmit"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="24dp"
-            android:text="Kirim Laporan" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pilih foto untuk foto bukti"
+                        android:textColor="@color/black"
+                        android:textSize="12sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
 
-    </LinearLayout>
-</ScrollView>
+                <ImageView
+                    android:id="@+id/ivPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:contentDescription="Preview" />
+            </FrameLayout>
+
+            <Button
+                android:id="@+id/btnSubmit"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:background="@drawable/bg_neo_brutalist_button_green"
+                android:text="KIRIM LAPORAN"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                app:backgroundTint="@null" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

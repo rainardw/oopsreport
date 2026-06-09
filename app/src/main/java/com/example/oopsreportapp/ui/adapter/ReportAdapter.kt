@@ -1,11 +1,12 @@
 package com.example.oopsreportapp.ui.adapter
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.oopsreportapp.R
 import com.example.oopsreportapp.data.model.Report
 import com.example.oopsreportapp.databinding.ItemReportBinding
 import java.text.SimpleDateFormat
@@ -34,29 +35,38 @@ class ReportAdapter(
 
         fun bind(report: Report) {
             binding.tvTitle.text = report.title
-            binding.tvDescription.text = report.description
+            binding.tvDesc.text = report.description
             binding.tvLocation.text = report.location
-            binding.tvCategory.text = report.category
             binding.tvStatus.text = report.status
             binding.tvDate.text = formatDate(report.createdAt)
 
-            // Badge Prioritas
-            binding.tvPriorityBadge.text = report.priority
-            val priorityColor = when (report.priority) {
-                "Darurat" -> "#F44336" // Merah
-                "Sedang" -> "#FF9800"  // Orange
-                else -> "#4CAF50"      // Hijau
-            }
-            binding.tvPriorityBadge.setBackgroundColor(Color.parseColor(priorityColor))
+            val context = itemView.context
 
-            // Warna Status
-            val statusColor = when (report.status) {
-                "Pending" -> "#FF9800"
-                "Proses" -> "#2196F3"
-                "Selesai" -> "#4CAF50"
-                else -> "#757575"
+            // Badge Prioritas
+            binding.tvPriority.text = report.priority
+            val priorityColor = when (report.priority) {
+                "Darurat" -> R.color.status_red
+                "Sedang" -> R.color.status_orange
+                else -> R.color.status_green
             }
-            binding.tvStatus.setTextColor(Color.parseColor(statusColor))
+            binding.tvPriority.setBackgroundColor(ContextCompat.getColor(context, priorityColor))
+
+            // Warna Status (Background matching item_report.xml style)
+            val statusColor = when (report.status) {
+                "Pending" -> R.color.status_orange
+                "Proses" -> R.color.status_blue
+                "Selesai" -> R.color.status_green
+                else -> R.color.text_secondary
+            }
+            binding.tvStatus.setBackgroundColor(ContextCompat.getColor(context, statusColor))
+            binding.tvStatus.setTextColor(ContextCompat.getColor(context, if (report.status == "Proses" || report.status == "Selesai" && report.priority == "Darurat") R.color.white else R.color.black))
+            
+            // Fix text color logic for status
+            if (report.status == "Proses") {
+                binding.tvStatus.setTextColor(ContextCompat.getColor(context, R.color.white))
+            } else {
+                binding.tvStatus.setTextColor(ContextCompat.getColor(context, R.color.black))
+            }
 
             itemView.setOnClickListener { onItemClick(report) }
         }
