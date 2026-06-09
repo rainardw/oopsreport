@@ -1,14 +1,13 @@
 package com.example.oopsreportapp.ui.report
 
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.os.Bundle
 import android.os.Environment
 import android.util.Base64
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -59,8 +58,33 @@ class ReportDetailActivity : AppCompatActivity() {
             return
         }
 
+        binding.btnMenu.setOnClickListener {
+            showMenuDialog()
+        }
+
         observeViewModel()
         viewModel.loadReportById(reportId!!)
+    }
+
+    private fun showMenuDialog() {
+        val options = arrayOf("Unduh PDF", "Hapus Laporan")
+        AlertDialog.Builder(this)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> currentReport?.let { generatePDF(it) }
+                    1 -> {
+                        AlertDialog.Builder(this)
+                            .setTitle("Hapus Laporan?")
+                            .setMessage("Data ini akan dihapus permanen.")
+                            .setPositiveButton("Hapus") { _, _ ->
+                                reportId?.let { viewModel.deleteReport(it) }
+                            }
+                            .setNegativeButton("Batal", null)
+                            .show()
+                    }
+                }
+            }
+            .show()
     }
 
     private fun displayReportDetails(report: Report) {
@@ -69,35 +93,31 @@ class ReportDetailActivity : AppCompatActivity() {
             tvDetailTitle.text = report.title
             tvDetailStatus.text = report.status
             tvDetailDescription.text = report.description
-            
             tvDetailPriority.text = report.priority
             
+            tvAdminResponse.text = if (report.adminResponse.isEmpty()) "Belum ada tanggapan." else report.adminResponse
+            
             tvLogDate1.text = formatDate(report.createdAt)
-            tvLogDate2.text = formatDate(report.processedAt ?: report.createdAt)
+            tvLogDate2.text = if (report.completedAt != null) formatDate(report.completedAt) else if (report.processedAt != null) formatDate(report.processedAt) else "-"
+            tvLogText2.text = if (report.status == "Selesai") "Laporan Selesai" else if (report.status == "Proses") "Laporan Diproses" else "Menunggu Validasi"
 
-            // PERBAIKAN FOTO: Mendukung URL Storage dan Base64
             if (!report.imageUrl.isNullOrEmpty()) {
+                tvNoImage.visibility = View.GONE
                 ivDetailImage.visibility = View.VISIBLE
-                
-                if (report.imageUrl.startsWith("http")) {
+                try {
+                    val imageBytes = Base64.decode(report.imageUrl, Base64.DEFAULT)
                     Glide.with(this@ReportDetailActivity)
-                        .load(report.imageUrl)
+                        .asBitmap()
+                        .load(imageBytes)
                         .placeholder(android.R.drawable.ic_menu_gallery)
                         .into(ivDetailImage)
-                } else {
-                    try {
-                        val imageBytes = Base64.decode(report.imageUrl, Base64.DEFAULT)
-                        Glide.with(this@ReportDetailActivity)
-                            .asBitmap()
-                            .load(imageBytes)
-                            .placeholder(android.R.drawable.ic_menu_gallery)
-                            .into(ivDetailImage)
-                    } catch (e: Exception) {
-                        ivDetailImage.visibility = View.GONE
-                    }
+                } catch (e: Exception) {
+                    ivDetailImage.visibility = View.GONE
+                    tvNoImage.visibility = View.VISIBLE
                 }
             } else {
                 ivDetailImage.visibility = View.GONE
+                tvNoImage.visibility = View.VISIBLE
             }
         }
     }
@@ -138,7 +158,7 @@ class ReportDetailActivity : AppCompatActivity() {
         drawField("Lokasi", report.location)
         drawField("Prioritas", report.priority)
         drawField("Status Akhir", report.status)
-        drawField("Tanggal Lapor", formatDate(report.createdAt))
+        drawField("Tanggal Lapor", SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(report.createdAt ?: java.util.Date()))
         
         y += 10f
         paint.isFakeBoldText = true
@@ -159,11 +179,31 @@ class ReportDetailActivity : AppCompatActivity() {
         }
         canvas.drawText(line, x + 20f, y, paint)
         
-        y += 50f
+        y += 40f
         paint.isFakeBoldText = true
         canvas.drawText("Tanggapan Administrator:", x, y, paint); y += 25f
         paint.isFakeBoldText = false
         canvas.drawText(if (report.adminResponse.isEmpty()) "Dalam tahap peninjauan." else report.adminResponse, x + 20f, y, paint)
+
+        // Draw Image if exists
+        if (!report.imageUrl.isNullOrEmpty()) {
+            try {
+                val imageBytes = Base64.decode(report.imageUrl, Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                if (bitmap != null) {
+                    y += 50f
+                    if (y + 200 > 800) { // Check if space is enough, otherwise new page or just stop
+                         // Simplification: just draw it if it fits
+                    }
+                    val scaledWidth = 300f
+                    val scaledHeight = (bitmap.height.toFloat() / bitmap.width.toFloat()) * scaledWidth
+                    val scaledBitmap = Bitmap.createScaledBitmap(bitmap, scaledWidth.toInt(), scaledHeight.toInt(), true)
+                    canvas.drawBitmap(scaledBitmap, x, y, paint)
+                }
+            } catch (e: Exception) {
+                // Skip image if fails
+            }
+        }
 
         pdfDocument.finishPage(page)
 
@@ -192,12 +232,18 @@ class ReportDetailActivity : AppCompatActivity() {
             binding.layoutAdminAction.visibility = View.VISIBLE
             binding.btnProcess.setOnClickListener {
                 val response = binding.etResponse.text.toString().trim()
-                if (response.isNotEmpty()) viewModel.updateReportStatus(report.id, "Proses", response)
+                if (response.isNotEmpty()) {
+                    viewModel.updateReportStatus(report.id, "Proses", response)
+                    binding.etResponse.text.clear()
+                }
                 else Toast.makeText(this, "Tanggapan wajib diisi!", Toast.LENGTH_SHORT).show()
             }
             binding.btnDone.setOnClickListener {
                 val response = binding.etResponse.text.toString().trim()
-                if (response.isNotEmpty()) viewModel.updateReportStatus(report.id, "Selesai", response)
+                if (response.isNotEmpty()) {
+                    viewModel.updateReportStatus(report.id, "Selesai", response)
+                    binding.etResponse.text.clear()
+                }
                 else Toast.makeText(this, "Tanggapan wajib diisi!", Toast.LENGTH_SHORT).show()
             }
         } else {
@@ -228,6 +274,8 @@ class ReportDetailActivity : AppCompatActivity() {
                     viewModel.updateState.collectLatest { state ->
                         if (state is UiState.Success) {
                             Toast.makeText(this@ReportDetailActivity, state.data, Toast.LENGTH_SHORT).show()
+                        } else if (state is UiState.Error) {
+                            Toast.makeText(this@ReportDetailActivity, state.message, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

@@ -29,6 +29,7 @@ class StatsActivity : AppCompatActivity() {
         binding = ActivityStatsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
             title = "Statistik Fakultas Teknik"
             setDisplayHomeAsUpEnabled(true)
@@ -51,10 +52,12 @@ class StatsActivity : AppCompatActivity() {
     }
 
     private fun updateUI(reports: List<Report>) {
+        val totalAll = reports.size
         val totalPending = reports.count { it.status == "Pending" }
         val totalProses = reports.count { it.status == "Proses" }
         val totalSelesai = reports.count { it.status == "Selesai" }
 
+        binding.tvTotal.text = totalAll.toString()
         binding.tvTotalPending.text = totalPending.toString()
         binding.tvTotalProses.text = totalProses.toString()
         binding.tvTotalSelesai.text = totalSelesai.toString()
@@ -111,7 +114,6 @@ class StatsActivity : AppCompatActivity() {
                 setBackgroundColor(Color.parseColor("#EEEEEE"))
                 
                 val progress = View(context).apply {
-                    // Perbaikan: Gunakan toFloat() agar hasil bagi tidak selalu 0
                     val weight = (count.toFloat() / maxCount).coerceAtLeast(0.05f)
                     layoutParams = LinearLayout.LayoutParams(0, -1, weight)
                     setBackgroundColor(Color.parseColor(colors[index % colors.size]))

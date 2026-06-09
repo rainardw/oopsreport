@@ -77,18 +77,19 @@ class CreateReportActivity : AppCompatActivity() {
         }
     }
 
-    // Fungsi baru untuk mengubah gambar ke Base64 (Plan B)
     private fun getBase64Image(path: String?): String? {
         if (path == null) return null
         return try {
             val file = File(path)
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: return null
             
-            // Resize gambar jika terlalu besar (opsional tapi disarankan)
-            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, 800, (bitmap.height * (800.0 / bitmap.width)).toInt(), true)
+            val scaledBitmap = if (bitmap.width > 800) {
+                Bitmap.createScaledBitmap(bitmap, 800, (bitmap.height * (800.0 / bitmap.width)).toInt(), true)
+            } else {
+                bitmap
+            }
             
             val outputStream = ByteArrayOutputStream()
-            // Kompresi kualitas ke 60% agar ukuran string tidak terlalu besar
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
             val byteArray = outputStream.toByteArray()
             
@@ -99,8 +100,8 @@ class CreateReportActivity : AppCompatActivity() {
     }
 
     private fun setupDropdowns() {
-        val categories = arrayOf("Fasilitas", "Kebersihan", "Keamanan", "Lainnya")
-        val locations = arrayOf("Gedung A", "Gedung B", "Gedung C", "Gedung D", "Gedung F")
+        val categories = arrayOf("Fasilitas", "Keamanan", "Kebersihan")
+        val locations = arrayOf("Gedung A", "Gedung B", "Gedung C", "D", "E", "Lainnya")
         val priorities = arrayOf("Rendah", "Sedang", "Darurat")
 
         binding.etCategory.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, categories))
@@ -109,6 +110,8 @@ class CreateReportActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
+        binding.btnClose.setOnClickListener { finish() }
+        
         binding.btnPickImage.setOnClickListener {
             launcherGallery.launch("image/*")
         }
@@ -131,7 +134,6 @@ class CreateReportActivity : AppCompatActivity() {
                 else -> 3
             }
 
-            // Ubah gambar ke Base64 string sebelum dikirim
             val base64Image = getBase64Image(savedImagePath)
 
             val report = Report(
@@ -145,10 +147,10 @@ class CreateReportActivity : AppCompatActivity() {
                 priorityValue = pValue,
                 description = description,
                 status = "Pending",
-                createdAt = Date()
+                createdAt = Date(),
+                imageUrl = base64Image
             )
 
-            // Kirim laporan dengan string gambar (Base64)
             viewModel.createReport(report, base64Image)
         }
     }

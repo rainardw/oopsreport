@@ -74,6 +74,9 @@ class DashboardActivity : AppCompatActivity() {
         binding.fabCreateReport.setOnClickListener {
             startActivity(Intent(this, CreateReportActivity::class.java))
         }
+        binding.btnProfile.setOnClickListener {
+            // Profile logic if needed
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -114,9 +117,11 @@ class DashboardActivity : AppCompatActivity() {
                             if (state.data.isEmpty()) {
                                 binding.emptyStateLayout.visibility = View.VISIBLE
                                 binding.rvReports.visibility = View.GONE
+                                binding.tvEmptyState.visibility = View.GONE
                             } else {
                                 binding.emptyStateLayout.visibility = View.GONE
                                 binding.rvReports.visibility = View.VISIBLE
+                                binding.tvEmptyState.visibility = View.GONE
                             }
                         }
                         is UiState.Error -> {
