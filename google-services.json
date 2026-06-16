@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "574289905625",
+    "project_id": "oopsreportapp",
+    "storage_bucket": "oopsreportapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574289905625:android:cde6a7764b993fab943bc8",
+        "android_client_info": {
+          "package_name": "com.example.oopsreportapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYL8PmmTK5ef1ea9j3lCAo1xugahMtOKw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
