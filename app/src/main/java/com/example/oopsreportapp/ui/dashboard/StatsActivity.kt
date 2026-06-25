@@ -59,6 +59,29 @@ class StatsActivity : AppCompatActivity() {
         binding.tvTotalProses.text = totalProses.toString()
         binding.tvTotalSelesai.text = totalSelesai.toString()
 
+        val completedReports = reports.filter { it.status == "Selesai" && it.createdAt != null && it.completedAt != null }
+        if (completedReports.isNotEmpty()) {
+            var totalDiff = 0L
+            completedReports.forEach { report ->
+                val diff = report.completedAt!!.time - report.createdAt!!.time
+                totalDiff += diff
+            }
+            val avgDiff = totalDiff / completedReports.size
+            
+            val days = avgDiff / (24 * 60 * 60 * 1000)
+            val hours = (avgDiff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)
+            val minutes = (avgDiff % (60 * 60 * 1000)) / (60 * 1000)
+            
+            val avgText = when {
+                days > 0 -> "${days} Hari ${hours} Jam"
+                hours > 0 -> "${hours} Jam ${minutes} Menit"
+                else -> "${minutes} Menit"
+            }
+            binding.tvAvgResolutionTime.text = avgText
+        } else {
+            binding.tvAvgResolutionTime.text = "-"
+        }
+
         val locationStats = reports.groupBy { it.location }
             .mapValues { it.value.size }
             .toList()
