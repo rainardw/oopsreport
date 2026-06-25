@@ -187,6 +187,12 @@ class DashboardActivity : AppCompatActivity() {
                         is UiState.Success -> {
                             binding.progressBar.visibility = View.GONE
                             originalList = state.data
+                            val role = sessionManager.getUserRole() ?: "Mahasiswa"
+                            binding.tvSubtitle.text = "$role • ${state.data.size} Laporan"
+                            val pending = state.data.count { it.status == "Pending" }
+
+                            binding.tvSubtitle.text =
+                                "Total ${state.data.size} Laporan • Pending $pending"
                             adapter.submitList(originalList)
 
                             if (state.data.isEmpty()) {
