@@ -31,6 +31,9 @@
         <activity android:name=".ui.dashboard.StatsActivity" />
         <activity android:name=".ui.report.CreateReportActivity" />
         <activity android:name=".ui.report.ReportDetailActivity" />
+        <activity android:name=".ui.report.EditReportActivity" />
+        <activity android:name=".ui.profile.EditProfileActivity" />
+        <activity android:name=".ui.profile.ChangePasswordActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

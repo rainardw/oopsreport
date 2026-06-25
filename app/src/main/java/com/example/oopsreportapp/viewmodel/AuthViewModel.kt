@@ -43,4 +43,53 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateProfile(userId: String, name: String, phone: String) {
+        viewModelScope.launch {
+            _authState.value = UiState.Loading
+            val updates = mapOf(
+                "name" to name,
+                "phone" to phone
+            )
+            val result = repository.updateProfile(userId, updates)
+            if (result.isSuccess) {
+                // Fetch updated user data
+                val userResult = repository.getUserData(userId)
+                _authState.value = if (userResult.isSuccess) {
+                    UiState.Success(userResult.getOrNull()!!)
+                } else {
+                    UiState.Error("Profile updated but failed to refresh data")
+                }
+            } else {
+                _authState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Update profile gagal")
+            }
+        }
+    }
+
+    fun getUser(userId: String) {
+        viewModelScope.launch {
+            _authState.value = UiState.Loading
+            val result = repository.getUserData(userId)
+            _authState.value = if (result.isSuccess) {
+                UiState.Success(result.getOrNull()!!)
+            } else {
+                UiState.Error(result.exceptionOrNull()?.message ?: "Gagal mengambil data user")
+            }
+        }
+    }
+
+    private val _passwordState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val passwordState: StateFlow<UiState<Unit>> = _passwordState.asStateFlow()
+
+    fun changePassword(oldPassword: String, newPassword: String) {
+        viewModelScope.launch {
+            _passwordState.value = UiState.Loading
+            val result = repository.changePassword(oldPassword, newPassword)
+            if (result.isSuccess) {
+                _passwordState.value = UiState.Success(Unit)
+            } else {
+                _passwordState.value = UiState.Error(result.exceptionOrNull()?.message ?: "Gagal ganti password")
+            }
+        }
+    }
 }

@@ -75,7 +75,7 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, CreateReportActivity::class.java))
         }
         binding.btnProfile.setOnClickListener {
-            // Profile logic if needed
+            startActivity(Intent(this, com.example.oopsreportapp.ui.profile.EditProfileActivity::class.java))
         }
     }
 
@@ -143,6 +143,7 @@ class DashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        setupUI()
         loadReports()
     }
 }

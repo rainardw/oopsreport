@@ -21,6 +21,10 @@ class SessionManager(context: Context) {
     fun getUserName(): String? = prefs.getString("USER_NAME", null)
     fun getUserRole(): String? = prefs.getString("USER_ROLE", "student")
 
+    fun updateUserName(newName: String) {
+        prefs.edit().putString("USER_NAME", newName).apply()
+    }
+
     fun clearSession() {
         prefs.edit().clear().apply()
     }

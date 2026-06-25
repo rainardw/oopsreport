@@ -53,6 +53,43 @@ class AuthRepository {
         }
     }
 
+    suspend fun updateProfile(userId: String, updates: Map<String, Any>): Result<Unit> {
+        return try {
+            db.collection("users").document(userId).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getUserData(userId: String): Result<User> {
+        return try {
+            val snapshot = db.collection("users").document(userId).get().await()
+            val user = snapshot.toObject(User::class.java)
+            if (user != null) Result.success(user)
+            else Result.failure(Exception("User data not found"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: return Result.failure(Exception("Sesi berakhir, silakan login kembali"))
+            val email = user.email ?: return Result.failure(Exception("Email tidak ditemukan"))
+
+            // Re-authenticate user
+            val credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, oldPassword)
+            user.reauthenticate(credential).await()
+
+            // Update password
+            user.updatePassword(newPassword).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun logout() {
         auth.signOut()
     }

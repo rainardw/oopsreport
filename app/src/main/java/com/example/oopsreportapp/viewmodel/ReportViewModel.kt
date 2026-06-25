@@ -76,6 +76,18 @@ class ReportViewModel(private val repository: ReportRepository) : ViewModel() {
         }
     }
 
+    fun updateReport(report: Report, base64Image: String?) {
+        viewModelScope.launch {
+            _submitState.value = UiState.Loading
+            try {
+                repository.updateReport(report, base64Image)
+                _submitState.value = UiState.Success(report.id)
+            } catch (e: Exception) {
+                _submitState.value = UiState.Error(e.message ?: "Gagal memperbarui laporan")
+            }
+        }
+    }
+
     fun updateReportStatus(reportId: String, status: String, response: String) {
         viewModelScope.launch {
             _updateState.value = UiState.Loading

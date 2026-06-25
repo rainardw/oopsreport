@@ -67,12 +67,30 @@ class ReportDetailActivity : AppCompatActivity() {
     }
 
     private fun showMenuDialog() {
-        val options = arrayOf("Unduh PDF", "Hapus Laporan")
+        val menuOptions = mutableListOf("Unduh PDF")
+        
+        val isOwner = currentReport?.userId == sessionManager.getUserId()
+        val isPending = currentReport?.status == "Pending"
+        
+        if (isOwner && isPending) {
+            menuOptions.add("Edit Laporan")
+        }
+        
+        menuOptions.add("Hapus Laporan")
+        
+        val options = menuOptions.toTypedArray()
+        
         AlertDialog.Builder(this)
             .setItems(options) { _, which ->
-                when (which) {
-                    0 -> currentReport?.let { generatePDF(it) }
-                    1 -> {
+                when (options[which]) {
+                    "Unduh PDF" -> currentReport?.let { generatePDF(it) }
+                    "Edit Laporan" -> {
+                        val intent = Intent(this, EditReportActivity::class.java).apply {
+                            putExtra("EXTRA_REPORT", currentReport)
+                        }
+                        startActivity(intent)
+                    }
+                    "Hapus Laporan" -> {
                         AlertDialog.Builder(this)
                             .setTitle("Hapus Laporan?")
                             .setMessage("Data ini akan dihapus permanen.")

@@ -79,6 +79,16 @@ class ReportRepository {
         } catch (e: Exception) { }
     }
 
+    suspend fun updateReport(report: Report, base64Image: String?): String {
+        val finalReport = if (base64Image != null) {
+            report.copy(imageUrl = base64Image, updatedAt = Date())
+        } else {
+            report.copy(updatedAt = Date())
+        }
+        reportsCollection.document(report.id).set(finalReport).await()
+        return report.id
+    }
+
     suspend fun deleteReport(reportId: String) {
         reportsCollection.document(reportId).delete().await()
     }
