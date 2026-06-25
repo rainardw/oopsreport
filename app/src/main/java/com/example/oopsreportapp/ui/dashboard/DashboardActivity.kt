@@ -23,6 +23,8 @@ import com.example.oopsreportapp.viewmodel.ReportViewModel
 import com.example.oopsreportapp.viewmodel.UiState
 import com.example.oopsreportapp.viewmodel.ViewModelFactory
 import kotlinx.coroutines.launch
+import com.example.oopsreportapp.data.model.Report
+import android.widget.PopupMenu
 
 class DashboardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDashboardBinding
@@ -31,6 +33,7 @@ class DashboardActivity : AppCompatActivity() {
     }
     private lateinit var sessionManager: SessionManager
     private lateinit var adapter: ReportAdapter
+    private var originalList = listOf<Report>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,13 +74,48 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
+
         binding.fabCreateReport.setOnClickListener {
             startActivity(Intent(this, CreateReportActivity::class.java))
         }
+
         binding.btnProfile.setOnClickListener {
             // Profile logic if needed
         }
+
+        // Semua
+        binding.btnAll.setOnClickListener {
+            adapter.submitList(originalList)
+        }
+
+        // Pending
+        binding.btnPending.setOnClickListener {
+            adapter.submitList(
+                originalList.filter {
+                    it.status.equals("Pending", ignoreCase = true)
+                }
+            )
+        }
+
+        // Proses
+        binding.btnProcess.setOnClickListener {
+            adapter.submitList(
+                originalList.filter {
+                    it.status.equals("Proses", ignoreCase = true)
+                }
+            )
+        }
+
+        // Selesai
+        binding.btnDone.setOnClickListener {
+            adapter.submitList(
+                originalList.filter {
+                    it.status.equals("Selesai", ignoreCase = true)
+                }
+            )
+        }
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.dashboard_menu, menu)
@@ -100,7 +138,43 @@ class DashboardActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+        binding.toolbar.setOnLongClickListener {
+
+            val popup = PopupMenu(this, binding.toolbar)
+
+            popup.menu.add("Terbaru")
+            popup.menu.add("Terlama")
+
+            popup.setOnMenuItemClickListener { item ->
+
+                when (item.title) {
+
+                    "Terbaru" -> {
+                        adapter.submitList(
+                            originalList.sortedByDescending {
+                                it.createdAt
+                            }
+                        )
+                    }
+
+                    "Terlama" -> {
+                        adapter.submitList(
+                            originalList.sortedBy {
+                                it.createdAt
+                            }
+                        )
+                    }
+                }
+
+                true
+            }
+
+            popup.show()
+
+            true
+        }
     }
+
 
     private fun observeViewModel() {
         lifecycleScope.launch {
@@ -112,7 +186,8 @@ class DashboardActivity : AppCompatActivity() {
                         }
                         is UiState.Success -> {
                             binding.progressBar.visibility = View.GONE
-                            adapter.submitList(state.data)
+                            originalList = state.data
+                            adapter.submitList(originalList)
 
                             if (state.data.isEmpty()) {
                                 binding.emptyStateLayout.visibility = View.VISIBLE

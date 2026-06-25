@@ -76,6 +76,53 @@
             </FrameLayout>
 
         </LinearLayout>
+        <HorizontalScrollView
+            android:id="@+id/filterStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none"
+            app:layout_constraintTop_toBottomOf="@id/headerLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="Semua"/>
+
+                <Button
+                    android:id="@+id/btnPending"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:text="Pending"/>
+
+                <Button
+                    android:id="@+id/btnProcess"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:text="Proses"/>
+
+                <Button
+                    android:id="@+id/btnDone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:text="Selesai"/>
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
 
         <!-- RecyclerView for Reports -->
         <androidx.recyclerview.widget.RecyclerView
@@ -85,7 +132,7 @@
             android:paddingHorizontal="24dp"
             android:clipToPadding="false"
             android:paddingBottom="100dp"
-            app:layout_constraintTop_toBottomOf="@id/headerLayout"
+            app:layout_constraintTop_toBottomOf="@id/filterStatus"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -102,7 +149,7 @@
             android:padding="32dp"
             android:gravity="center"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/headerLayout">
+            app:layout_constraintTop_toBottomOf="@id/filterStatus">
 
             <FrameLayout
                 android:layout_width="80dp"
